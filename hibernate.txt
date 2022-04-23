@@ -1,0 +1,1685 @@
+User Registration
+------------------------
+public class User{
+    String userId;
+    String name;
+    Long phoneNumber;
+	String password;
+	public User() {
+		super();
+	}
+
+	public User(String userId, String name, Long phoneNumber, String password) {
+		super();
+		this.userId = userId;
+		this.name = name;
+		this.phoneNumber = phoneNumber;
+		this.password = password;
+	}
+
+
+
+	public String getName() {
+		return name;
+	}
+	public void setName(String name) {
+		this.name = name;
+	}
+	public Long getPhoneNumber() {
+		return phoneNumber;
+	}
+	public void setPhoneNumber(Long phoneNumber) {
+		this.phoneNumber = phoneNumber;
+	}
+	public String getUserId() {
+		return userId;
+	}
+	public void setUserId(String userId) {
+		this.userId = userId;
+	}
+	public String getPassword() {
+		return password;
+	}
+	public void setPassword(String password) {
+		this.password = password;
+	}
+	@Override
+	public String toString() {
+		return String.format("%-15s %-15s %s","Name","Phone number","User id");
+	}
+
+}
+--------------------------
+import java.util.ResourceBundle;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+
+
+import org.hibernate.SessionFactory;
+import org.hibernate.cfg.Configuration;
+
+
+
+public class HibernateUtil
+{
+    private static SessionFactory sessionFactory=null;
+
+
+
+    static {
+    	try
+		{
+			Logger log = Logger.getLogger("org.hibernate");
+			log.setLevel(Level.OFF);
+			System.setProperty("org.apache.commons.logging.Log","org.apache.commons.logging.impl.NoOpLog");
+			ResourceBundle rb = ResourceBundle.getBundle("oracle");
+			Configuration cfg = new Configuration();
+			cfg.configure("hibernate.cfg.xml");
+			cfg.setProperty("hibernate.connection.url", rb.getString("db.url"));
+			cfg.setProperty("hibernate.connection.username", rb.getString("db.username"));
+			cfg.setProperty("hibernate.connection.password", rb.getString("db.password"));
+			sessionFactory=cfg.buildSessionFactory();
+		}
+		catch (Throwable ex)
+		{
+			System.err.println("SessionFactory initial creation error."+ ex);
+		}
+	}
+
+	public static SessionFactory getSessionFactory()
+	{
+		try {
+			Class.forName("HibernateUtil");
+		} catch (ClassNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return sessionFactory;
+
+
+	}
+}
+
+
+---------------------------------
+import java.util.List;
+import org.hibernate.Criteria;
+import org.hibernate.Session;
+import org.hibernate.SessionFactory;
+import org.hibernate.Transaction;
+import org.hibernate.criterion.Order;
+public class UserDAO {
+    SessionFactory factory = HibernateUtil.getSessionFactory();
+    User i = new User(null, null, null, null);
+    public void insert(User user) {
+		Session ss = factory.openSession();
+		Transaction tx = ss.beginTransaction();
+		try {
+			ss.save(user);
+			ss.getTransaction().commit();
+		}
+		catch (Exception e) {
+			ss.getTransaction().rollback();
+		}
+		ss.close();
+	}
+	public List<User> list(){
+		Session ss=factory.openSession();
+		Transaction tt=ss.beginTransaction();
+		Criteria c=ss.createCriteria(User.class);
+
+
+
+		c.addOrder(Order.asc("name"));
+		c.addOrder(Order.asc("phoneNumber"));
+		List<User> list=c.list();
+		ss.close();
+		return list;
+	}
+}
+--------------------------------------
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping>
+<class name ="User" table='"user"'>
+<id name="UserId" column="UserId" type="java.lang.String"/>
+<property name="name" column="Name" type="java.lang.String"/>
+<property name="phoneNumber" column="phoneNumber" type="java.lang.Long"/>
+<property name="password" column="password" type="java.lang.String"/>
+</class>
+</hibernate-mapping>
+
+-------------------------------------------------
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE hibernate-configuration PUBLIC "-//Hibernate/Hibernate Configuration DTD 3.0//EN" "http://hibernate.sourceforge.net/hibernate-configuration-3.0.dtd">
+<hibernate-configuration>
+<session-factory>
+
+<property name="hibernate.dialect">org.hibernate.dialect.Oracle8iDialect</property>
+<property name="hibernate.connection.driver_class">oracle.jdbc.OracleDriver</property>
+<property name="hibernate.hbm2ddl.auto">update</property>
+
+<mapping resource="User.hbm.xml"/>
+</session-factory>
+</hibernate-configuration>
+----------------------------------------------
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.util.List;
+
+public class Main {
+    static BufferedReader br=new BufferedReader(new InputStreamReader(System.in));
+    public static void main(String[] args) throws Exception {
+    	UserDAO dao=new UserDAO();
+		String userId,name,password;
+		Long phoneNumber;
+		System.out.println("Enter no. of users");
+		int no=Integer.parseInt(br.readLine());
+		for(int i=1;i<=no;i++) {
+			System.out.println("Enter name of user "+i);
+			name=br.readLine();
+			System.out.println("Enter phone number of user "+i);
+			phoneNumber=Long.parseLong(br.readLine());
+			System.out.println("Enter user id of user "+i);
+			userId=br.readLine();
+			System.out.println("Enter password of user "+i);
+			password=br.readLine();
+			User u=new User(userId,name,phoneNumber,password);
+			dao.insert(u);
+		}
+		System.out.println("User Details");
+		System.out.printf("%-15s %-15s %s\n","Name","Phone number","User id");
+		List<User> ul=dao.list();
+		for(User u:ul) {
+			System.out.printf("%-15s %-15s %s\n",u.getName(),u.getPhoneNumber(),u.getUserId());
+		}
+	}
+}
+
+======================================================================
+public class User{
+	String userId;
+	String name;
+	Long phoneNumber;
+	String password;
+	public User() {
+		super();
+	}
+	public String getName() {
+		return name;
+	}
+	public void setName(String name) {
+		this.name = name;
+	}
+	public Long getPhoneNumber() {
+		return phoneNumber;
+	}
+	public void setPhoneNumber(Long phoneNumber) {
+		this.phoneNumber = phoneNumber;
+	}
+	public String getUserId() {
+		return userId;
+	}
+	public void setUserId(String userId) {
+		this.userId = userId;
+	}
+	public String getPassword() {
+		return password;
+	}
+	public void setPassword(String password) {
+		this.password = password;
+	}
+}
+-------------------------
+import org.hibernate.Session;
+import org.hibernate.Transaction;
+
+//FILL YOUR CODE
+
+public class UserDAO {
+    public void insert(User user) {
+		Session session = HibernateUtil.getSessionFactory().openSession();
+        Transaction tx = null;
+        
+        try {
+           tx = session.beginTransaction();
+           session.save(user);
+           tx.commit();
+        }
+        
+        catch (Exception e) {
+           if (tx!=null) tx.rollback();
+        } finally {
+           session.close();
+        }
+	}
+	
+	public User find(String id){
+		Session session = HibernateUtil.getSessionFactory().openSession();
+		User user = (User) session.get(User.class, id);
+		session.close();
+		
+        return user;
+	}
+}
+
+
+-----------------------------------------
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping>
+    <class name = "User" table = '"user"'>
+        <id name = "userId" type = "string" column = "userId" ></id>
+        
+        <property name = "name" column = "name" type = "string"/>
+        <property name = "phoneNumber" column = "phoneNumber" type = "long"/>
+        <property name = "password" column = "password" type = "string"/>
+    </class>
+</hibernate-mapping>
+------------------------------------------
+import java.util.ResourceBundle;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import org.hibernate.SessionFactory;
+import org.hibernate.cfg.Configuration;
+
+public class HibernateUtil {
+    private static SessionFactory sessionFactory = null;
+
+	static {
+		try {
+			Logger log = Logger.getLogger("org.hibernate");
+			log.setLevel(Level.OFF);
+			System.setProperty("org.apache.commons.logging.Log", "org.apache.commons.logging.impl.NoOpLog");
+			ResourceBundle rb = ResourceBundle.getBundle("oracle");
+			Configuration cfg = new Configuration();
+			cfg.configure("hibernate.cfg.xml");
+			cfg.setProperty("hibernate.connection.url", rb.getString("db.url"));
+			cfg.setProperty("hibernate.connection.username", rb.getString("db.username"));
+			cfg.setProperty("hibernate.connection.password", rb.getString("db.password"));
+			sessionFactory = cfg.buildSessionFactory();
+		} catch (Throwable ex) {
+			System.err.println("SessionFactory initial creation error." + ex);
+		}
+	}
+
+	public static SessionFactory getSessionFactory() {
+		return sessionFactory;
+	}
+}
+
+-------------------------------------
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE hibernate-configuration PUBLIC "-//Hibernate/Hibernate Configuration DTD 3.0//EN" "http://hibernate.sourceforge.net/hibernate-configuration-3.0.dtd">
+<hibernate-configuration>
+  <session-factory>
+    <property name="hibernate.dialect">org.hibernate.dialect.Oracle8iDialect</property>
+    <property name="hibernate.connection.driver_class">oracle.jdbc.OracleDriver</property>
+    <property name="hibernate.hbm2ddl.auto">update</property>
+    <!-- fill your code here-->
+    <mapping resource="User.hbm.xml"/>
+  </session-factory>
+</hibernate-configuration>
+--------------------------------------------------
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.util.List;
+
+public class Main {
+    static BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+
+	public static void main(String[] args) throws NumberFormatException, IOException {
+		UserDAO udao = new UserDAO();
+
+		int n = 0;
+
+		while (n != 3) {
+			System.out.println("Menu\r\n" + "1.Sign up\r\n" + "2.Login\r\n" + "3.Exit\r\n" + "Enter choice");
+			n = Integer.parseInt(br.readLine());
+
+			switch (n) {
+
+			case 1:
+				User user = new User();
+
+				System.out.println("Enter name");
+				user.setName(br.readLine());
+
+				System.out.println("Enter phone number");
+				user.setPhoneNumber(Long.parseLong(br.readLine()));
+
+				System.out.println("Enter user id");
+				user.setUserId(br.readLine());
+
+				System.out.println("Enter password");
+				user.setPassword(br.readLine());
+				
+				udao.insert(user);
+				
+				break;
+				
+			case 2 :
+				
+				System.out.println("Enter user id");
+				User u = udao.find(br.readLine());
+				
+				if (u != null) {
+					System.out.println("Enter password");
+					if (br.readLine().equals(u.getPassword())) {
+						System.out.println("Welcome " + u.getName() + ". This is secret only accessible to the authenticated user");
+					} else {
+						System.out.println("Wrong password. Please try again");
+					}
+				} else {
+					System.out.println("No such user. Please sign up before login.");
+				}
+				break;
+				
+			case 3:
+				break;
+				
+			default : 
+				System.out.println("Invalid choice");
+			}
+		}
+		System.out.println("Bye");
+
+	}
+}
+===================================================================================
+import java.util.ResourceBundle;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import org.hibernate.SessionFactory;
+import org.hibernate.cfg.Configuration;
+
+public class HibernateUtil {
+    private static SessionFactory sessionFactory = null;
+
+	static {
+		try {
+			ResourceBundle rb = ResourceBundle.getBundle("oracle");
+			Configuration cfg = new Configuration();
+			cfg.configure("hibernate.cfg.xml");
+			cfg.setProperty("hibernate.connection.url", rb.getString("db.url"));
+			cfg.setProperty("hibernate.connection.username", rb.getString("db.username"));
+			cfg.setProperty("hibernate.connection.password", rb.getString("db.password"));
+			// fill your code here
+			sessionFactory = cfg.buildSessionFactory();
+		} catch (Throwable ex) {
+			System.err.println("SessionFactory initial creation error." + ex);
+		}
+	}
+
+	public static SessionFactory getSessionFactory() {
+		return sessionFactory;
+		// fill your code here
+	}
+}
+-------------------------
+import java.util.ResourceBundle;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import org.hibernate.SessionFactory;
+import org.hibernate.cfg.Configuration;
+
+public class HibernateUtil {
+    private static SessionFactory sessionFactory = null;
+
+	static {
+		try {
+			ResourceBundle rb = ResourceBundle.getBundle("oracle");
+			Configuration cfg = new Configuration();
+			cfg.configure("hibernate.cfg.xml");
+			cfg.setProperty("hibernate.connection.url", rb.getString("db.url"));
+			cfg.setProperty("hibernate.connection.username", rb.getString("db.username"));
+			cfg.setProperty("hibernate.connection.password", rb.getString("db.password"));
+			// fill your code here
+			sessionFactory = cfg.buildSessionFactory();
+		} catch (Throwable ex) {
+			System.err.println("SessionFactory initial creation error." + ex);
+		}
+	}
+
+	public static SessionFactory getSessionFactory() {
+		return sessionFactory;
+		// fill your code here
+	}
+}
+-------------------------------------
+import java.util.List;
+
+import org.hibernate.Query;
+import org.hibernate.Session;
+import org.hibernate.SessionFactory;
+
+public class ItemDAO {
+    public List<Item> list() {
+		SessionFactory factory = HibernateUtil.getSessionFactory();
+		Session session = factory.openSession();
+
+		List<Item> al = (List<Item>) session.createSQLQuery("SELECT * FROM item ORDER BY id").addEntity(Item.class)
+				.list();
+
+		session.close();
+
+		return al;
+	}
+
+	public Double averagePriceByCategory(String category) {
+		SessionFactory factory = HibernateUtil.getSessionFactory();
+		Session session = factory.openSession();
+		
+		Query avgQuery = session.createQuery("SELECT AVG(i.price) FROM item i WHERE category = :param1");
+		avgQuery.setString("param1", category);
+		
+		Double avg = (Double) avgQuery.list().get(0);
+		
+		session.close();
+		
+		return avg;
+	}
+}
+
+----------------------------------------------
+import java.util.ResourceBundle;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import org.hibernate.SessionFactory;
+import org.hibernate.cfg.Configuration;
+
+public class HibernateUtil {
+    private static SessionFactory sessionFactory = null;
+
+	static {
+		try {
+			ResourceBundle rb = ResourceBundle.getBundle("oracle");
+			Configuration cfg = new Configuration();
+			cfg.configure("hibernate.cfg.xml");
+			cfg.setProperty("hibernate.connection.url", rb.getString("db.url"));
+			cfg.setProperty("hibernate.connection.username", rb.getString("db.username"));
+			cfg.setProperty("hibernate.connection.password", rb.getString("db.password"));
+			// fill your code here
+			sessionFactory = cfg.buildSessionFactory();
+		} catch (Throwable ex) {
+			System.err.println("SessionFactory initial creation error." + ex);
+		}
+	}
+
+	public static SessionFactory getSessionFactory() {
+		return sessionFactory;
+		// fill your code here
+	}
+}
+---------------------------------------------------------------
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import javax.persistence.criteria.CriteriaBuilder.In;
+
+import org.hibernate.Session;
+
+public class Main {
+    static BufferedReader br=new BufferedReader(new InputStreamReader(System.in));
+    public static void main(String[] args) throws NumberFormatException, IOException, ParseException {
+		Logger log = Logger.getLogger("org.hibernate");
+    	log.setLevel(Level.OFF);
+    	System.setProperty("org.apache.commons.logging.Log","org.apache.commons.logging.impl.NoOpLog");
+    	
+    	ItemBO itbo = new ItemBO();
+    	
+		do {
+			System.out.println("Menu");
+			System.out.println("1.Display items");
+			System.out.println("2.Calculate average price for particular category");
+			System.out.println("3.Exit");
+			System.out.println("Enter choice");
+			
+			switch(Integer.parseInt(br.readLine())) {
+			case 1:
+				
+				List<Item> itemList = itbo.listItems();
+				System.out.println("Item Details");
+				if(itemList.isEmpty()) {
+					System.out.println("Empty list");
+					System.exit(0);
+				}
+				System.out.printf("%-15s %-15s %-15s %-15s %s\n","Id","Name","Category","Number","Price");
+				for(Item item:itemList)
+			System.out.printf("%-15s %-15s %-15s %-15s %s\n",item.getId(),item.getName(),item.getCategory(),item.getQuantity(),item.getPrice());
+				break;
+				
+			case 2:
+				System.out.println("Enter category");
+				String category = br.readLine();
+				System.out.println("average price of items under "+category+" category "+itbo.averagePriceByCategory(category));
+				break;
+				
+			case 3:
+				System.exit(0);
+				
+			default:
+				System.out.println("Inavlid choice");
+			}
+		}while(true);
+	}
+}
+============================
+
+public class Item{
+    Integer id;
+	String name;
+	String category;
+	Integer number;
+	Float price;
+	public Item() {
+		super();
+	}
+	
+	public Item(Integer id, String name, String category, Integer number, Float price) {
+		super();
+		this.id = id;
+		this.name = name;
+		this.category = category;
+		this.number = number;
+		this.price = price;
+	}
+
+	public Integer getId() {
+		return id;
+	}
+	public void setId(Integer id) {
+		this.id = id;
+	}
+	public String getName() {
+		return name;
+	}
+	public void setName(String name) {
+		this.name = name;
+	}
+	public String getCategory() {
+		return category;
+	}
+	public void setCategory(String category) {
+		this.category = category;
+	}
+	public Integer getNumber() {
+		return number;
+	}
+	public void setNumber(Integer number) {
+		this.number = number;
+	}
+	public Float getPrice() {
+		return price;
+	}
+	public void setPrice(Float price) {
+		this.price = price;
+	}
+	@Override
+	 public String toString(){
+return String.format("%-15s %-15s %-15s %-15s %s\n",this.getId(),this.getName(),this.getCategory(),this.getNumber(),this.getPrice());
+	    }
+	
+	
+}
+===============================================
+import java.util.List;
+
+import org.hibernate.Criteria;
+import org.hibernate.Session;
+import org.hibernate.SessionFactory;
+import org.hibernate.Transaction;
+public class ItemDAO {
+    SessionFactory factory = HibernateUtil.getSessionFactory();
+	Item i = new Item();
+	public void insert(Item item) {
+		Session ses = factory.openSession();
+		Transaction tx = ses.beginTransaction();
+		try {
+			ses.save(item);
+			ses.getTransaction().commit();
+		} catch (Exception e) {
+			ses.getTransaction().rollback();
+		}
+		ses.close();
+	}
+	public void update(Item item) {
+		Session ses = factory.openSession();
+		ses.update(item);
+		ses.beginTransaction();
+		ses.getTransaction().commit();
+		ses.close();
+	}
+	public List<Item> list() {
+		Session ses=factory.openSession();
+		ses.beginTransaction();
+		Criteria c=ses.createCriteria(Item.class);
+		List<Item> list=c.list();
+		ses.close();
+		return list;
+	}
+	public Item find(int id) {
+		Session ses = factory.openSession();
+		ses.beginTransaction();
+		Item i= (Item)ses.get(Item.class, id);
+		// System.out.println(i);
+		ses.close();
+		return i;
+	}
+
+}
+=================================================
+
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping>
+    <class name="Item" table="item">
+		<id name="id" column="id" type="java.lang.Integer" />
+		<property name="name" column="name" type="java.lang.String" />
+		<property name="category" column="category"
+			type="java.lang.String" />
+		<property name="number" column="&quot;number&quot;"
+			type="java.lang.Integer" />
+		<property name="price" column="price" type="java.lang.Float" />
+	</class>
+</hibernate-mapping>
+==========================================
+import java.util.ResourceBundle;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import org.hibernate.SessionFactory;
+import org.hibernate.cfg.Configuration;
+public class HibernateUtil
+{
+private static SessionFactory sessionFactory=null;
+static {
+try
+{
+Logger log = Logger.getLogger("org.hibernate");
+log.setLevel(Level.OFF);
+System.setProperty("org.apache.commons.logging.Log","org.apache.commons.logging.impl.NoOpLog");
+ResourceBundle rb = ResourceBundle.getBundle("oracle");
+Configuration cfg = new Configuration();
+cfg.configure("hibernate.cfg.xml");
+cfg.setProperty("hibernate.connection.url", rb.getString("db.url"));
+cfg.setProperty("hibernate.connection.username", rb.getString("db.username"));
+cfg.setProperty("hibernate.connection.password", rb.getString("db.password"));
+sessionFactory =cfg.buildSessionFactory();
+}
+catch (Throwable ex)
+{
+System.err.println("SessionFactory initial creation error."+ ex);
+}
+}
+
+public static SessionFactory getSessionFactory()
+{
+return sessionFactory;
+}
+}
+================================
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE hibernate-configuration PUBLIC
+"-//Hibernate/Hibernate Configuration DTD 3.0//EN" "http://hibernate.sourceforge.net/hibernate-configuration-3.0.dtd">
+<hibernate-configuration>
+<session-factory>
+<property name="hibernate.dialect">org.hibernate.dialect.Oracle9iDialect</property>
+<property name="hibernate.connection.driver_class">oracle.jdbc.OracleDriver</property>
+<property name="hibernate.hbm2ddl.auto">update</property>
+
+<mapping resource="Item.hbm.xml"/>
+</session-factory>
+</hibernate-configuration>
+=============================================
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.util.List;
+public class Main {
+    static BufferedReader br=new BufferedReader(new InputStreamReader(System.in));
+	public static void main(String[] args) throws NumberFormatException, IOException {
+		ItemDAO ido=new ItemDAO();
+
+		Integer id,number;
+		String name,category;
+		Float price;
+		do {
+			System.out.println("Menu\n1.Add item\n2.Change item\n3.Display items\n4.Exit\nEnter choice");
+			switch(Integer.parseInt(br.readLine())) {
+			case 1:
+
+				System.out.println("Enter item id");
+				id=Integer.parseInt(br.readLine());
+				System.out.println("Enter name");
+				name=br.readLine();
+				System.out.println("Enter category");
+				category=br.readLine();
+				System.out.println("Enter number");
+				number=Integer.parseInt(br.readLine());
+				System.out.println("Enter price");
+				price=Float.parseFloat(br.readLine());
+
+				Item ii=new Item(id,name,category,number,price);
+				ido.insert(ii);
+				System.out.println("Added to the list successfully");
+				break;
+			case 2:
+				System.out.println("Enter item id");
+				id=Integer.parseInt(br.readLine());
+				Item i1=ido.find(id);
+				// if(id!=i1.getId())
+				if(i1==null)
+					System.out.println("Item not found");
+				else {
+					System.out.println("Enter name");
+					name=br.readLine();
+					System.out.println("Enter category");
+					category=br.readLine();
+					System.out.println("Enter number");
+					number=Integer.parseInt(br.readLine());
+					System.out.println("Enter price");
+					price=Float.parseFloat(br.readLine());
+					Item i=new Item(id,name,category,number,price);
+					ido.update(i);
+					System.out.println("Changes are updated successfully");
+				}
+				break;
+
+			case 3:
+				List<Item> itemList=ido.list();
+
+				if(itemList.isEmpty())
+				{
+					System.out.println("Empty list");
+				}
+				else
+				{
+					System.out.printf("%-15s %-15s %-15s %-15s %s\n","Id","Name","Category","Number","Price");
+					for(Item it:itemList) {
+System.out.printf("%-15s %-15s %-15s %-15s %s\n", it.getId(),it.getName(),it.getCategory(),it.getNumber(),it.getPrice());
+					}
+				}
+				break;
+			case 4:
+				System.out.println("Bye");
+				System.exit(0);
+			default:
+				System.out.println("Invalid choice");
+			}
+		}while(true);
+	}
+}
+
+================================================================================
+
+Update and Delete using HQL
+
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.Table;
+
+@Entity(name="item")
+@Table(name="item")
+public class Item {
+    @Id
+    Integer id;
+    @Column(name="name")
+	String itemName;
+	@Column()
+	String category;
+	@Column(name="quantity")
+	Integer number;
+	@Column()
+	Float price;
+	public Item() {
+		super();
+	}
+	public Integer getId() {
+		return id;
+	}
+	public void setId(Integer id) {
+		this.id = id;
+	}
+	public String getName() {
+		return itemName;
+	}
+	public void setName(String name) {
+		this.itemName = name;
+	}
+	public String getCategory() {
+		return category;
+	}
+	public void setCategory(String category) {
+		this.category = category;
+	}
+	public Integer getNumber() {
+		return number;
+	}
+	public void setNumber(Integer number) {
+		this.number = number;
+	}
+	public Float getPrice() {
+		return price;
+	}
+	public void setPrice(Float price) {
+		this.price = price;
+	}
+}
+--------------------------------------------------
+import java.util.List;
+
+import org.hibernate.Query;
+import org.hibernate.Session;
+import org.hibernate.SessionFactory;
+import org.hibernate.Transaction;
+
+public class ItemDAO {
+    public List<Item> list() {
+		SessionFactory factory = HibernateUtil.getSessionFactory();
+		Session session = factory.openSession();
+
+		List<Item> al = (List<Item>) session.createSQLQuery("SELECT * FROM item ORDER BY id").addEntity(Item.class)
+				.list();
+
+		session.close();
+
+		return al;
+	}
+
+	public Item find(int id) {
+		SessionFactory factory = HibernateUtil.getSessionFactory();
+		Session session = factory.openSession();
+		
+		Item item = null;
+		
+		try {
+			Query qry = session.createQuery("SELECT i FROM item i WHERE i.id = :id");
+			qry.setInteger("id", id);
+			
+			item = (Item) qry.list().get(0);
+		} catch (Exception e) {} finally {
+			
+			session.close();
+		}
+		
+		return item;
+	}
+
+	public void updateItemPriceById(Item item) {
+		SessionFactory factory = HibernateUtil.getSessionFactory();
+		Session session = factory.openSession();
+
+		Transaction tx = session.beginTransaction();
+
+		session.update(item);
+		tx.commit();
+		session.close();
+	}
+
+	public void delete(Item item) {
+		SessionFactory factory = HibernateUtil.getSessionFactory();
+		Session session = factory.openSession();
+
+		Transaction tx = session.beginTransaction();
+
+		session.delete(item);
+		tx.commit();
+		session.close();
+	}
+}
+---------------------------------------------------------
+import java.util.List;
+
+public class ItemBO {
+    ItemDAO itemDAO=new ItemDAO();
+    public List<Item> listItems(){
+		return itemDAO.list();
+	}
+	public void updateItemPriceById(Item item) {
+		itemDAO.updateItemPriceById(item);
+	}
+	public void deleteItem(Item item) {
+		itemDAO.delete(item);
+	}
+	public Item findItemById(int id) {
+		return itemDAO.find(id);
+	}
+}
+------------------------
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE hibernate-configuration PUBLIC "-//Hibernate/Hibernate Configuration DTD 3.0//EN" "http://hibernate.sourceforge.net/hibernate-configuration-3.0.dtd">
+<hibernate-configuration>
+  <session-factory>
+    <property name="hibernate.dialect">org.hibernate.dialect.Oracle8iDialect</property>
+    <property name="hibernate.connection.driver_class">oracle.jdbc.OracleDriver</property>
+    <property name="hibernate.hbm2ddl.auto">update</property>
+    
+    <mapping class="Item" />
+  </session-factory>
+</hibernate-configuration>
+-------------------------------------
+import java.util.ResourceBundle;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import org.hibernate.SessionFactory;
+import org.hibernate.cfg.Configuration;
+
+public class HibernateUtil 
+{
+   private static SessionFactory sessionFactory=null;
+
+    static {   
+        try 
+        {
+        ResourceBundle rb = ResourceBundle.getBundle("oracle");
+            Configuration cfg = new Configuration();
+            cfg.configure("hibernate.cfg.xml");
+            cfg.setProperty("hibernate.connection.url", rb.getString("db.url"));
+            cfg.setProperty("hibernate.connection.username", rb.getString("db.username"));
+            cfg.setProperty("hibernate.connection.password", rb.getString("db.password"));
+            //fill your code here
+            sessionFactory = cfg.buildSessionFactory();
+        }
+        catch (Throwable ex) 
+        {
+            System.err.println("SessionFactory initial creation error."+ ex);    
+        }
+    }
+    
+    public static SessionFactory getSessionFactory() 
+    {
+		return sessionFactory;
+        //fill your code here
+    }
+}
+------------------------------------------
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import javax.persistence.criteria.CriteriaBuilder.In;
+
+import org.hibernate.Session;
+
+public class Main {
+    static BufferedReader br=new BufferedReader(new InputStreamReader(System.in));
+    public static void main(String[] args) throws NumberFormatException, IOException, ParseException {
+		
+		ItemBO ibo = new ItemBO();
+		
+		Logger log = Logger.getLogger("org.hibernate");
+    	log.setLevel(Level.OFF);
+    	System.setProperty("org.apache.commons.logging.Log","org.apache.commons.logging.impl.NoOpLog");
+    		do {
+			System.out.println("Menu");
+			System.out.println("1.Update item price");
+			System.out.println("2.Delete item");
+			System.out.println("3.Display items");
+			System.out.println("4.Exit");
+			System.out.println("Enter choice");
+			switch(Integer.parseInt(br.readLine())) {
+			case 1:
+				System.out.println("Enter item id");
+				int id = Integer.parseInt(br.readLine());
+				Item item = ibo.findItemById(id);
+				if(item == null) {
+					System.out.println("Item not found");
+					break;
+				}
+				System.out.println("Enter new price");
+				item.setPrice(Float.parseFloat(br.readLine()));
+				ibo.updateItemPriceById(item);
+				break;
+				
+			case 2:
+				System.out.println("Enter item id");
+				int id2 = Integer.parseInt(br.readLine());
+				Item item2 = ibo.findItemById(id2);
+				if(item2 == null) {
+					System.out.println("Item not found");
+					break;
+				}
+				ibo.deleteItem(item2);
+				break;
+				
+			case 3:
+				System.out.println("Item Details");
+				List<Item> itemList = ibo.listItems();
+				if(itemList.isEmpty()) {
+					System.out.println("Empty list");
+					System.exit(0);
+				}
+				System.out.printf("%-15s %-15s %-15s %-15s %s\n","Id","Name","Category","Number","Price");
+				for(Item i:itemList)
+					System.out.printf("%-15s %-15s %-15s %-15s %s\n",i.getId(),i.getName(),i.getCategory(),i.getNumber(),i.getPrice());
+				break;
+			case 4:
+				System.exit(0);
+			default:
+				System.out.println("Invalid choice");
+			}
+		}while(true);
+	}
+}
+=========================================================
+Filter tickets using criteria and restrictions
+-----------------------------------------------------
+
+import javax.persistence.Entity;
+import javax.persistence.*;
+
+@Entity(name="ticket")
+@Table(name="ticket")
+public class Ticket {
+    @Id
+    Integer id;
+	@Column
+	String bookedBy;
+	@Column
+	String event;
+	@Column
+	Float price;
+	public Ticket() {
+		super();
+	}
+	public Integer getId() {
+		return id;
+	}
+	public void setId(Integer id) {
+		this.id = id;
+	}
+	public String getBookedBy() {
+		return bookedBy;
+	}
+	public void setBookedBy(String bookedBy) {
+		this.bookedBy = bookedBy;
+	}
+	public String getEvent() {
+		return event;
+	}
+	public void setEvent(String event) {
+		this.event = event;
+	}
+	public Float getPrice() {
+		return price;
+	}
+	public void setPrice(Float price) {
+		this.price = price;
+	}
+}
+-------------------------
+import java.util.ResourceBundle;
+import org.hibernate.SessionFactory;
+import org.hibernate.cfg.Configuration;
+
+public class HibernateUtil 
+{
+   private static SessionFactory sessionFactory=null;
+
+    static {   
+        try 
+        {
+        ResourceBundle rb = ResourceBundle.getBundle("oracle");
+            Configuration cfg = new Configuration();
+            cfg.configure("hibernate.cfg.xml");
+            cfg.setProperty("hibernate.connection.url", rb.getString("db.url"));
+            cfg.setProperty("hibernate.connection.username", rb.getString("db.username"));
+            cfg.setProperty("hibernate.connection.password", rb.getString("db.password"));
+            //fill your code here
+            sessionFactory = cfg.buildSessionFactory();
+        }
+        catch (Throwable ex) 
+        {
+            System.err.println("SessionFactory initial creation error."+ ex);    
+        }
+    }
+    
+    public static SessionFactory getSessionFactory() 
+    {
+		return sessionFactory;
+        //fill your code here
+    }
+}
+-------------------------------------
+import java.util.List;
+
+import org.hibernate.*;
+import org.hibernate.criterion.Restrictions;
+
+//Filter your code
+
+public class TicketDAO {
+    public List<Ticket> listTicketsByBookedBy(String bookedBy) {
+    	
+    	SessionFactory factory = HibernateUtil.getSessionFactory();
+    	Session session = factory.openSession();
+    	
+    	Criteria crit = session.createCriteria(Ticket.class);
+    	crit.add(Restrictions.eq("bookedBy", bookedBy));
+    	    	
+    	return (List<Ticket>)crit.list();
+	}
+}
+
+------------------------------------------
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE hibernate-configuration PUBLIC "-//Hibernate/Hibernate Configuration DTD 3.0//EN" "http://hibernate.sourceforge.net/hibernate-configuration-3.0.dtd">
+<hibernate-configuration>
+  <session-factory>
+    <property name="hibernate.dialect">org.hibernate.dialect.Oracle8iDialect</property>
+    <property name="hibernate.connection.driver_class">oracle.jdbc.OracleDriver</property>
+    <property name="hibernate.hbm2ddl.auto">update</property>
+    <!-- fill your code here-->
+    <mapping class="Ticket" />
+  </session-factory>
+</hibernate-configuration>
+------------------------------------------------------
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.text.ParseException;
+import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import javax.persistence.criteria.CriteriaBuilder.In;
+
+import org.hibernate.Session;
+
+public class Main {
+    static BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+
+	public static void main(String[] args) throws NumberFormatException, IOException, ParseException {
+		Logger log = Logger.getLogger("org.hibernate");
+		log.setLevel(Level.OFF);
+		System.setProperty("org.apache.commons.logging.Log",
+		"org.apache.commons.logging.impl.NoOpLog");
+		
+		TicketDAO ticketDAO = new TicketDAO();
+		Ticket ticket = new Ticket();
+		List<Ticket> ticketList = null;
+		System.out.println("Enter booked visitor name");
+		ticketList = ticketDAO.listTicketsByBookedBy(br.readLine());
+		System.out.println("Ticket Details");
+		if (ticketList.isEmpty()) {
+			System.out.println("Empty list");
+			System.exit(0);
+		}
+		System.out.printf("%-15s %-15s %-15s %s\n", "Id", "Booked by", "Event", "Price");
+		for (Ticket t : ticketList) {
+			System.out.printf("%-15s %-15s %-15s %s\n", t.getId(), t.getBookedBy(), t.getEvent(), t.getPrice());
+		}
+		// Fill your code
+		System.exit(0);
+	}
+}
+
+
+--------------------------------------------
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import javax.persistence.criteria.CriteriaBuilder.In;
+
+import org.hibernate.Session;
+
+public class Main {
+    static BufferedReader br=new BufferedReader(new InputStreamReader(System.in));
+    public static void main(String[] args) throws NumberFormatException, IOException, ParseException {
+		
+		ItemBO ibo = new ItemBO();
+		
+		Logger log = Logger.getLogger("org.hibernate");
+    	log.setLevel(Level.OFF);
+    	System.setProperty("org.apache.commons.logging.Log","org.apache.commons.logging.impl.NoOpLog");
+    		do {
+			System.out.println("Menu");
+			System.out.println("1.Update item price");
+			System.out.println("2.Delete item");
+			System.out.println("3.Display items");
+			System.out.println("4.Exit");
+			System.out.println("Enter choice");
+			switch(Integer.parseInt(br.readLine())) {
+			case 1:
+				System.out.println("Enter item id");
+				int id = Integer.parseInt(br.readLine());
+				Item item = ibo.findItemById(id);
+				if(item == null) {
+					System.out.println("Item not found");
+					break;
+				}
+				System.out.println("Enter new price");
+				item.setPrice(Float.parseFloat(br.readLine()));
+				ibo.updateItemPriceById(item);
+				break;
+				
+			case 2:
+				System.out.println("Enter item id");
+				int id2 = Integer.parseInt(br.readLine());
+				Item item2 = ibo.findItemById(id2);
+				if(item2 == null) {
+					System.out.println("Item not found");
+					break;
+				}
+				ibo.deleteItem(item2);
+				break;
+				
+			case 3:
+				System.out.println("Item Details");
+				List<Item> itemList = ibo.listItems();
+				if(itemList.isEmpty()) {
+					System.out.println("Empty list");
+					System.exit(0);
+				}
+				System.out.printf("%-15s %-15s %-15s %-15s %s\n","Id","Name","Category","Number","Price");
+				for(Item i:itemList)
+					System.out.printf("%-15s %-15s %-15s %-15s %s\n",i.getId(),i.getName(),i.getCategory(),i.getNumber(),i.getPrice());
+				break;
+			case 4:
+				System.exit(0);
+			default:
+				System.out.println("Invalid choice");
+			}
+		}while(true);
+	}
+}
+
+-----------------------------------------
+import java.util.ResourceBundle;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import org.hibernate.SessionFactory;
+import org.hibernate.cfg.Configuration;
+
+public class HibernateUtil 
+{
+   private static SessionFactory sessionFactory=null;
+
+    static {   
+        try 
+        {
+        ResourceBundle rb = ResourceBundle.getBundle("oracle");
+            Configuration cfg = new Configuration();
+            cfg.configure("hibernate.cfg.xml");
+            cfg.setProperty("hibernate.connection.url", rb.getString("db.url"));
+            cfg.setProperty("hibernate.connection.username", rb.getString("db.username"));
+            cfg.setProperty("hibernate.connection.password", rb.getString("db.password"));
+            //fill your code here
+            sessionFactory = cfg.buildSessionFactory();
+        }
+        catch (Throwable ex) 
+        {
+            System.err.println("SessionFactory initial creation error."+ ex);    
+        }
+    }
+    
+    public static SessionFactory getSessionFactory() 
+    {
+		return sessionFactory;
+        //fill your code here
+    }
+}
+-----------------------------------
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE hibernate-configuration PUBLIC "-//Hibernate/Hibernate Configuration DTD 3.0//EN" "http://hibernate.sourceforge.net/hibernate-configuration-3.0.dtd">
+<hibernate-configuration>
+  <session-factory>
+    <property name="hibernate.dialect">org.hibernate.dialect.Oracle8iDialect</property>
+    <property name="hibernate.connection.driver_class">oracle.jdbc.OracleDriver</property>
+    <property name="hibernate.hbm2ddl.auto">update</property>
+    
+    <mapping class="Item" />
+  </session-factory>
+</hibernate-configuration>
+------------------------------------------------------------------
+========================================================================
+Hibernate annotation One-One
+
+import java.io.Serializable;
+
+import javax.persistence.*;
+
+@Entity(name="stall")
+@Table(name="stall")
+public class Stall implements Serializable{
+    @Id
+	Integer stallId;
+	@Column
+	String name;
+	@Column
+	String type;
+	@OneToOne(mappedBy="stall")
+	StallLicense license;
+	public Stall() {
+		super();
+	}
+	public Integer getStallId() {
+		return stallId;
+	}
+	public void setStallId(Integer stallId) {
+		this.stallId = stallId;
+	}
+	public String getName() {
+		return name;
+	}
+	public void setName(String name) {
+		this.name = name;
+	}
+	public String getType() {
+		return type;
+	}
+	public void setType(String type) {
+		this.type = type;
+	}
+	public StallLicense getLicense() {
+		return license;
+	}
+	public void setLicense(StallLicense license) {
+		this.license = license;
+	}
+	
+	}
+
+---------------------------------
+import java.util.List;
+
+import org.hibernate.Query;
+import org.hibernate.Session;
+import org.hibernate.SessionFactory;
+import org.hibernate.Transaction;
+
+public class StallDAO {
+    
+    SessionFactory factory = HibernateUtil.getSessionFactory();
+	Session session = factory.openSession();
+	
+	public void insert(Stall stall) {
+		Transaction tx = session.beginTransaction();
+		session.save(stall);
+		tx.commit();
+	}
+	
+	
+	public Stall find(int id) {
+		
+		Transaction tx = session.beginTransaction();
+		Stall s = (Stall) session.get(Stall.class, id);
+		tx.commit();
+		
+		return s;
+			
+	}
+	
+	
+	public void update(Stall stall) {
+		Transaction tx = session.beginTransaction();
+		
+		StallLicense sl = new StallLicense();
+		sl.setLicenseId(stall.getLicense().getLicenseId());
+		sl.setExpiryDate(stall.getLicense().getExpiryDate());
+		sl.setStall(stall);
+		
+		session.saveOrUpdate(sl);
+		tx.commit();
+	}
+	
+	
+	public List list() {
+		return session.createQuery("from stall s ORDER BY s.stallId").list();
+	}
+}
+---------------------------------
+import java.util.List;
+
+public class StallBO {
+    StallDAO stallDAO=new StallDAO();
+    public void registerStall(Stall stall) {
+		stallDAO.insert(stall);
+	}
+	public Stall findStallById(int id) {
+		return stallDAO.find(id);
+	}
+	public void getLicense(Stall stall) {
+		stallDAO.update(stall);
+	}
+	public List listStalls() {
+		return stallDAO.list();
+	}
+}
+--------------------------------
+import java.io.Serializable;
+
+import java.util.Date;
+
+import javax.persistence.CascadeType;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.FetchType;
+import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.OneToOne;
+import javax.persistence.Table;
+import javax.persistence.Temporal;
+import javax.persistence.TemporalType;
+
+@Entity(name="stallLicense")
+@Table(name="stallLicense")
+public class StallLicense implements Serializable{
+    @Id
+	@Column(name="licenseId")
+	Integer licenseId;
+	@Temporal(TemporalType.DATE)
+	Date expiryDate;
+	@OneToOne(cascade = CascadeType.ALL)
+	@JoinColumn(name="stallId")
+	Stall stall;
+	public Integer getLicenseId() {
+		return licenseId;
+	}
+	public void setLicenseId(Integer licenseId) {
+		this.licenseId = licenseId;
+	}
+	public Date getExpiryDate() {
+		return expiryDate;
+	}
+	public void setExpiryDate(Date expiryDate) {
+		this.expiryDate = expiryDate;
+	}
+	public Stall getStall() {
+		return stall;
+	}
+	public void setStall(Stall stall) {
+		this.stall = stall;
+	}
+}
+------------------------------
+import java.util.ResourceBundle;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import org.hibernate.SessionFactory;
+import org.hibernate.cfg.Configuration;
+
+public class HibernateUtil 
+{
+   private static SessionFactory sessionFactory=null;
+
+    static {   
+        try 
+        {
+        ResourceBundle rb = ResourceBundle.getBundle("oracle");
+            Configuration cfg = new Configuration();
+            cfg.configure("hibernate.cfg.xml");
+            cfg.setProperty("hibernate.connection.url", rb.getString("db.url"));
+            cfg.setProperty("hibernate.connection.username", rb.getString("db.username"));
+            cfg.setProperty("hibernate.connection.password", rb.getString("db.password"));
+            //fill your code here
+            sessionFactory = cfg.buildSessionFactory();
+        }
+        catch (Throwable ex) 
+        {
+            System.err.println("SessionFactory initial creation error."+ ex);    
+        }
+    }
+    
+    public static SessionFactory getSessionFactory() 
+    {
+		return sessionFactory;
+        //fill your code here
+    }
+}
+
+---------------------------------------------
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE hibernate-configuration PUBLIC "-//Hibernate/Hibernate Configuration DTD 3.0//EN" "http://hibernate.sourceforge.net/hibernate-configuration-3.0.dtd">
+<hibernate-configuration>
+  <session-factory>
+    <property name="hibernate.dialect">org.hibernate.dialect.Oracle8iDialect</property>
+    <property name="hibernate.connection.driver_class">oracle.jdbc.OracleDriver</property>
+    <property name="hibernate.hbm2ddl.auto">update</property>
+    
+    <!-- fill your code here-->
+    <mapping class="Stall" />
+    <mapping class="StallLicense" />
+  </session-factory>
+</hibernate-configuration>
+--------------------------------
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import org.hibernate.Session;
+
+public class Main {
+    static BufferedReader br=new BufferedReader(new InputStreamReader(System.in));
+    public static void main(String[] args) throws NumberFormatException, IOException, ParseException {
+		Logger log = Logger.getLogger("org.hibernate");
+    	log.setLevel(Level.OFF);
+    	System.setProperty("org.apache.commons.logging.Log","org.apache.commons.logging.impl.NoOpLog");
+    	
+    	StallBO sbo = new StallBO();
+
+		SimpleDateFormat sdf=new SimpleDateFormat("dd/MM/yyyy");
+		do {
+			System.out.println("Menu");
+			System.out.println("1.Stall Registration");
+			System.out.println("2.Stall Licensing");
+			System.out.println("3.Show stalls");
+			System.out.println("4.Exit");
+			System.out.println("Enter choice");
+			switch(Integer.parseInt(br.readLine())) {
+			
+			case 1:
+				Stall stall = new Stall();
+				
+				System.out.println("Enter stall id");
+				stall.setStallId(Integer.parseInt(br.readLine()));
+				
+				System.out.println("Enter stall name");
+				stall.setName(br.readLine());
+				
+				System.out.println("Enter stall type");
+				stall.setType(br.readLine());
+				
+				sbo.registerStall(stall);
+				break;
+				
+			case 2:
+				StallLicense stallLicense = new StallLicense();
+				
+				System.out.println("Enter license id");
+				stallLicense.setLicenseId(Integer.parseInt(br.readLine()));
+				
+				System.out.println("Enter expiry date");
+				stallLicense.setExpiryDate(sdf.parse(br.readLine()));
+				
+				System.out.println("Enter stall id");
+				Stall s = sbo.findStallById(Integer.parseInt(br.readLine()));
+				
+				if (s == null) {
+					System.out.println("Stall not found");
+					break;
+				}
+				
+				stallLicense.setStall(s);
+    			s.setLicense(stallLicense);
+				sbo.getLicense(s);
+				break;
+				
+			case 3:
+				
+				System.out.printf("%-15s %-15s %-15s %s\n","Stall id","Name","Type","License(Expiry)"); 
+				List list = sbo.listStalls();
+				for(Object o:list) {
+					stall=(Stall)o;
+					if(stall.getLicense()==null)
+						System.out.printf("%-15s %-15s %-15s %s\n",stall.getStallId(),stall.getName(),stall.getType(),"Not applied");
+					else
+						System.out.printf("%-15s %-15s %-15s %s\n",stall.getStallId(),stall.getName(),stall.getType(),stall.getLicense().getLicenseId()+"("+sdf.format(stall.getLicense().getExpiryDate())+")");
+				}
+				break;
+			case 4:
+				System.exit(0);
+			default:
+				System.out.println("Invalid choice");
+			}
+		}while(true);
+	}
+}
